@@ -81,6 +81,8 @@ def make_tts(s: Settings, locale: Locale):
 
             return OpenAITTSService(
                 api_key=s.openai_api_key,
-                settings=OpenAITTSService.Settings(model="gpt-4o-mini-tts", voice=voice),
+                settings=OpenAITTSService.Settings(
+                    model="gpt-4o-mini-tts", voice=voice, instructions=locale.tts_instructions
+                ),
             )
     raise ValueError(f"Unknown TTS_PROVIDER: {s.tts_provider}")

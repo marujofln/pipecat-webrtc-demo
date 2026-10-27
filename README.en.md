@@ -55,7 +55,9 @@ provider). The language of each call is picked in this order:
 3. The longest matching country code in `languages.by_prefix` (`"55": pt-BR`, `"1": en`).
 4. `DEFAULT_LANGUAGE` in `.env`.
 
-STT gets the full code (`pt-BR`) and TTS gets the base language (`pt`). Tool descriptions are in
+STT gets the full code (`pt-BR`) and TTS gets the base language (`pt`). The `pt` code does not
+set the accent; the voice does, which is why the `pt-BR` locale uses Brazilian voices. OpenAI has
+no per-accent voices, so the optional `tts_instructions` field asks its TTS for the accent. Tool descriptions are in
 English for every language; each language's `system.md` sets the language the agent replies in.
 
 To add a language, copy a folder under `agent/locales/` and name it after the new language (e.g.

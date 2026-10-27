@@ -20,6 +20,7 @@ class Locale:
     tools_heading: str
     no_tools: str
     voices: dict[str, str]
+    tts_instructions: str | None = None
 
     @property
     def base_language(self) -> Language:
@@ -47,6 +48,7 @@ def load_locales(directory: Path = LOCALES_DIR) -> dict[str, Locale]:
             tools_heading=data["tools_heading"],
             no_tools=data["no_tools"],
             voices=data.get("voices", {}),
+            tts_instructions=data.get("tts_instructions"),
         )
     return locales
 

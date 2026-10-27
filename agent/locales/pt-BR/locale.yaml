@@ -3,7 +3,10 @@ language: pt-BR
 greeting: "(A ligação começou. Cumprimente e pergunte como pode ajudar.)"
 tools_heading: Ferramentas disponíveis nesta ligação
 no_tools: nenhuma
+# Vozes brasileiras. O código "pt" não define o sotaque; quem define é a voz.
 voices:
-  cartesia: 700d1ee3-a641-4018-ba6e-899dcadc9e2b
-  elevenlabs: 21m00Tcm4TlvDq8ikWAM
-  openai: nova
+  cartesia: 2c5dc34c-50e9-4e93-9a87-08e81ad8b4bd    # Clara (Customer Support), pt-BR
+  elevenlabs: ORgG8rwdAiMYRug8RJwR                  # Ana Alice (Friendly & Clear), Voice Library
+  openai: nova                                      # multilíngue; sotaque guiado por tts_instructions
+# Usado só pelo TTS da OpenAI, que não tem vozes por sotaque.
+tts_instructions: Fale em português do Brasil, com sotaque brasileiro natural e tom cordial de atendimento.

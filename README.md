@@ -55,7 +55,9 @@ O idioma de cada chamada é escolhido nesta ordem:
 3. DDI com o prefixo mais longo em `languages.by_prefix` (`"55": pt-BR`, `"1": en`).
 4. `DEFAULT_LANGUAGE` no `.env`.
 
-O STT recebe o código completo (`pt-BR`) e o TTS recebe o idioma base (`pt`). As descrições das
+O STT recebe o código completo (`pt-BR`) e o TTS recebe o idioma base (`pt`). O código `pt` não
+define o sotaque: quem define é a voz, por isso o locale `pt-BR` usa vozes brasileiras. Como a OpenAI
+não tem vozes por sotaque, o campo opcional `tts_instructions` pede o sotaque ao TTS dela. As descrições das
 tools ficam em inglês para todos os idiomas, e o `system.md` de cada idioma define em que língua
 o agente responde.
 
