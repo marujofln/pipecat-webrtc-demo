@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agente de Voz Demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    button { font-size: 1.1rem; padding: 10px 20px; }
+    select, button { margin: 6px 0; }
+    #log { font-family: monospace; font-size: .85rem; white-space: pre-wrap; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Agente de voz</h1>
+  <p>Simula uma ligação do WhatsApp. O chamador define quais ferramentas o agente pode usar
+     (<code>agent/policies.yaml</code>).</p>
+  <label>Chamador:
+    <select id="caller">
+      <option value="web-demo">web-demo (staff: tudo)</option>
+      <option value="5511999990001">5511999990001 (patient: consultas)</option>
+      <option value="5511999990002">5511999990002 (resident: cancela)</option>
+      <option value="5500000000000">5500000000000 (guest: só FAQ)</option>
+    </select>
+  </label><br>
+  <button id="call">Ligar</button>
+  <audio id="audio" autoplay></audio>
+  <div id="log"></div>
+<script>
+const log = (m) => document.getElementById("log").textContent += m + "\n";
+const btn = document.getElementById("call");
+let pc = null;
+
+async function start() {
+  pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+  pc.ontrack = (e) => { document.getElementById("audio").srcObject = e.streams[0]; };
+  pc.onconnectionstatechange = () => log("conexão: " + pc.connectionState);
+  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mic.getTracks().forEach((t) => pc.addTrack(t, mic));
+  // SmallWebRTC espera transceivers de vídeo além do áudio.
+  pc.addTransceiver("video", { direction: "sendrecv" });
+  pc.addTransceiver("video", { direction: "sendrecv" });
+
+  await pc.setLocalDescription(await pc.createOffer());
+  await new Promise((r) => {
+    if (pc.iceGatheringState === "complete") return r();
+    pc.onicegatheringstatechange = () => pc.iceGatheringState === "complete" && r();
+  });
+  const res = await fetch("/api/offer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sdp: pc.localDescription.sdp,
+      type: pc.localDescription.type,
+      request_data: { caller: document.getElementById("caller").value },
+    }),
+  });
+  if (!res.ok) throw new Error("offer falhou: " + res.status);
+  await pc.setRemoteDescription(await res.json());
+  btn.textContent = "Desligar";
+}
+
+function stop() {
+  pc.getSenders().forEach((s) => s.track && s.track.stop());
+  pc.close();
+  pc = null;
+  btn.textContent = "Ligar";
+  log("desligado");
+}
+
+btn.onclick = () => (pc ? stop() : start().catch((e) => log("erro: " + e.message)));
+</script>
+</body>
+</html>

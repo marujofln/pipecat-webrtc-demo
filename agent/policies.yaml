@@ -1,0 +1,19 @@
+# Quais tools cada papel pode usar. O papel do chamador vem do número (E.164, sem "+").
+# Tools não listadas em nenhum papel são sempre negadas.
+roles:
+  guest:       # qualquer número desconhecido (e o cliente web de teste, se não configurado)
+    tools: [search_knowledge]
+  patient:
+    tools: [search_knowledge, list_available_slots, schedule_appointment]
+  resident:
+    tools: [search_knowledge, open_gate]
+  staff:
+    tools: [search_knowledge, list_available_slots, schedule_appointment, open_gate]
+
+default_role: guest
+
+# Chamador "web-demo" é o cliente de navegador local.
+callers:
+  web-demo: staff
+  "5511999990001": patient
+  "5511999990002": resident

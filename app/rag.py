@@ -1,0 +1,51 @@
+"""RAG local simples: chunks por heading dos .md em agent/knowledge, busca BM25."""
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+from rank_bm25 import BM25Okapi
+
+KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "agent" / "knowledge"
+
+
+@dataclass
+class Chunk:
+    source: str
+    heading: str
+    text: str
+
+
+def _tokenize(text: str) -> list[str]:
+    return re.findall(r"\w+", text.lower())
+
+
+def load_chunks(directory: Path = KNOWLEDGE_DIR) -> list[Chunk]:
+    chunks: list[Chunk] = []
+    for path in sorted(directory.glob("*.md")):
+        heading, lines = path.stem, []
+
+        def flush():
+            body = "\n".join(lines).strip()
+            if body:
+                chunks.append(Chunk(path.name, heading, body))
+
+        for line in path.read_text().splitlines():
+            if line.startswith("#"):
+                flush()
+                heading, lines = line.lstrip("# ").strip(), []
+            else:
+                lines.append(line)
+        flush()
+    return chunks
+
+
+class KnowledgeBase:
+    def __init__(self, directory: Path = KNOWLEDGE_DIR):
+        self.chunks = load_chunks(directory)
+        self._bm25 = BM25Okapi([_tokenize(f"{c.heading} {c.text}") for c in self.chunks])
+
+    def search(self, query: str, k: int = 3) -> list[Chunk]:
+        scores = self._bm25.get_scores(_tokenize(query))
+        ranked = sorted(zip(scores, self.chunks), key=lambda p: p[0], reverse=True)
+        return [c for s, c in ranked[:k] if s > 0]
