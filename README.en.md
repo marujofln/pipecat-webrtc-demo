@@ -2,7 +2,7 @@
 
 🇧🇷 [Leia em português](README.md)
 
-A Portuguese-speaking voice agent that answers WebRTC calls (WhatsApp Business Calling API or a
+A multilingual voice agent (pt-BR and en, extensible) that answers WebRTC calls (WhatsApp Business Calling API or a
 browser), follows instructions written in Markdown, looks up a knowledge base (RAG) and calls
 external APIs (CRM, parking system) **only when the caller is authorized**.
 
@@ -24,7 +24,7 @@ uv run uvicorn app.main:app --port 7860             # the agent
 
 Open http://localhost:7860, pick a caller and click **Ligar** (Call).
 
-Test script (the agent speaks Brazilian Portuguese):
+Test script (pick **English (en)** in the language selector to run it in English; the phrases below are for pt-BR):
 - "Que horas vocês abrem?" (What time do you open?) → answered from the knowledge base (`search_knowledge`).
 - As `5511999990001` (patient): "Quero marcar uma consulta" (I want to book an appointment) → lists slots and books in the CRM.
 - As `5511999990002` (resident): "Abre a cancela, placa ABC1D23" (Open the gate, plate ABC1D23) → opens the gate.
@@ -34,17 +34,34 @@ Test script (the agent speaks Brazilian Portuguese):
 
 | What | Where |
 |---|---|
-| Persona, tone and service rules | `agent/system.md` |
-| Knowledge base (RAG) | `agent/knowledge/*.md`, one chunk per `#`/`##` heading |
-| Who may use each tool | `agent/policies.yaml` (role → tools; phone number → role) |
+| Persona, tone and service rules | `agent/locales/<language>/system.md` |
+| Knowledge base (RAG) | `agent/locales/<language>/knowledge/*.md`, one chunk per `#`/`##` heading |
+| Greeting, voices and language code | `agent/locales/<language>/locale.yaml` |
+| Who may use each tool, language per number/country code | `agent/policies.yaml` |
 | New tools / APIs | `app/tools/` + register in `app/tools/__init__.py` |
 | Providers | `STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER` in `.env` |
 
 Supported providers: STT `deepgram|openai`, LLM `anthropic|openai|google`, TTS `cartesia|elevenlabs|openai`.
 To add another one, add a `case` in `app/providers.py`.
 
-To run the agent in another language, translate `agent/system.md` and `agent/knowledge/`, and
-change the `language` settings in `app/providers.py`.
+### Languages
+
+Each language is a folder under `agent/locales/` (currently `pt-BR` and `en`) holding
+`system.md`, the knowledge base and a `locale.yaml` (language code, greeting and a voice per TTS
+provider). The language of each call is picked in this order:
+
+1. The web client's language selector (`request_data.language`), for local testing only.
+2. The caller's explicit language in `policies.yaml`: `"5511999990003": {role: patient, language: en}`.
+3. The longest matching country code in `languages.by_prefix` (`"55": pt-BR`, `"1": en`).
+4. `DEFAULT_LANGUAGE` in `.env`.
+
+STT gets the full code (`pt-BR`) and TTS gets the base language (`pt`). Tool descriptions are in
+English for every language; each language's `system.md` sets the language the agent replies in.
+
+To add a language, copy a folder under `agent/locales/` and name it after the new language (e.g.
+`es`), translate `system.md` and `knowledge/`, set `language` (a Pipecat `Language` enum value,
+e.g. `es-ES`) and the voices in `locale.yaml`, and map country codes in `policies.yaml`. No code
+changes are needed.
 
 ### Authorization
 The prompt only tells the LLM which tools exist; the real gate is in each tool's handler
@@ -79,7 +96,7 @@ Behind restrictive NAT, a TURN server may be required for media.
 uv run pytest
 ```
 
-They cover authorization, RAG, tools against the mock (including denial when the LLM tries a
+They cover authorization, language resolution, RAG in both languages, tools against the mock (including denial when the LLM tries a
 disallowed tool) and WhatsApp webhook parsing/signature checks.
 
 ## Out of scope for v1

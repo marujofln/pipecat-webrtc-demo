@@ -11,8 +11,8 @@ def build_registry(kb: KnowledgeBase) -> ToolRegistry:
 
     search = Tool(
         name="search_knowledge",
-        description="Busca na base de conhecimento (horários, preços, regras, endereço, procedimentos).",
-        properties={"query": {"type": "string", "description": "Pergunta ou palavras-chave"}},
+        description="Searches the knowledge base (opening hours, prices, rules, address, procedures).",
+        properties={"query": {"type": "string", "description": "Question or keywords, in the language of the call"}},
         required=["query"],
         handler=search_knowledge,
     )

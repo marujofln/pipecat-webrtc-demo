@@ -2,7 +2,7 @@
 
 🇺🇸 [Read in English](README.en.md)
 
-Agente de voz em português que atende chamadas WebRTC (WhatsApp Business Calling API ou navegador),
+Agente de voz multilíngue (pt-BR e en, extensível) que atende chamadas WebRTC (WhatsApp Business Calling API ou navegador),
 segue instruções em Markdown, consulta uma base de conhecimento (RAG) e chama APIs externas
 (CRM, estacionamento) **somente quando o chamador tem autorização**.
 
@@ -34,14 +34,35 @@ Roteiro de teste:
 
 | O quê | Onde |
 |---|---|
-| Persona, tom e regras do atendimento | `agent/system.md` |
-| Base de conhecimento (RAG) | `agent/knowledge/*.md`, um trecho por título `#`/`##` |
-| Quem pode usar cada tool | `agent/policies.yaml` (papel → tools; número → papel) |
+| Persona, tom e regras do atendimento | `agent/locales/<idioma>/system.md` |
+| Base de conhecimento (RAG) | `agent/locales/<idioma>/knowledge/*.md`, um trecho por título `#`/`##` |
+| Saudação, vozes e código de idioma | `agent/locales/<idioma>/locale.yaml` |
+| Quem pode usar cada tool, idioma por número/DDI | `agent/policies.yaml` |
 | Novas tools / APIs | `app/tools/` + registro em `app/tools/__init__.py` |
 | Provedores | `STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER` no `.env` |
 
 Provedores suportados: STT `deepgram|openai`, LLM `anthropic|openai|google`, TTS `cartesia|elevenlabs|openai`.
 Para adicionar outro, inclua um `case` em `app/providers.py`.
+
+### Idiomas
+
+Cada idioma é uma pasta em `agent/locales/` (hoje `pt-BR` e `en`) com o `system.md`, a
+base de conhecimento e um `locale.yaml` (código do idioma, saudação e voz de cada provedor TTS).
+O idioma de cada chamada é escolhido nesta ordem:
+
+1. Seletor de idioma do cliente web (`request_data.language`), só para testes locais.
+2. Idioma explícito do chamador no `policies.yaml`: `"5511999990003": {role: patient, language: en}`.
+3. DDI com o prefixo mais longo em `languages.by_prefix` (`"55": pt-BR`, `"1": en`).
+4. `DEFAULT_LANGUAGE` no `.env`.
+
+O STT recebe o código completo (`pt-BR`) e o TTS recebe o idioma base (`pt`). As descrições das
+tools ficam em inglês para todos os idiomas, e o `system.md` de cada idioma define em que língua
+o agente responde.
+
+Para adicionar um idioma, copie uma pasta de `agent/locales/` com o nome do novo idioma (ex.:
+`es`), traduza o `system.md` e a `knowledge/`, ajuste o `language` (valor do enum `Language` do
+Pipecat, ex.: `es-ES`) e as vozes no `locale.yaml`, e mapeie os DDIs no `policies.yaml`. Não é
+preciso mudar código.
 
 ### Autorização
 O prompt só informa ao LLM quais tools existem; a barreira real fica no handler de cada tool
@@ -76,7 +97,7 @@ Atrás de NAT restritivo, pode ser necessário um servidor TURN para a mídia.
 uv run pytest
 ```
 
-Cobrem autorização, RAG, tools contra o mock (inclusive negação quando o LLM tenta uma tool não
+Cobrem autorização, resolução de idioma, RAG nos dois idiomas, tools contra o mock (inclusive negação quando o LLM tenta uma tool não
 permitida) e o parse/assinatura do webhook do WhatsApp.
 
 ## Fora da v1

@@ -1,25 +1,28 @@
-"""STT/LLM/TTS factories selected by STT_PROVIDER / LLM_PROVIDER / TTS_PROVIDER."""
+"""STT/LLM/TTS factories selected by STT_PROVIDER / LLM_PROVIDER / TTS_PROVIDER.
 
-from pipecat.transcriptions.language import Language
+STT gets the locale's full language (e.g. pt-BR); TTS gets the base language (e.g. pt),
+since some TTS services (Cartesia) pass the code through unchanged and only accept the base.
+"""
 
 from app.config import Settings
+from app.locales import Locale
 
 
-def make_stt(s: Settings):
+def make_stt(s: Settings, locale: Locale):
     match s.stt_provider:
         case "deepgram":
             from pipecat.services.deepgram.stt import DeepgramSTTService
 
             return DeepgramSTTService(
                 api_key=s.deepgram_api_key,
-                settings=DeepgramSTTService.Settings(model="nova-3", language=Language.PT_BR),
+                settings=DeepgramSTTService.Settings(model="nova-3", language=locale.language),
             )
         case "openai":
             from pipecat.services.openai.stt import OpenAISTTService
 
             return OpenAISTTService(
                 api_key=s.openai_api_key,
-                settings=OpenAISTTService.Settings(model="gpt-4o-transcribe", language=Language.PT),
+                settings=OpenAISTTService.Settings(model="gpt-4o-transcribe", language=locale.language),
             )
     raise ValueError(f"Unknown STT_PROVIDER: {s.stt_provider}")
 
@@ -50,7 +53,10 @@ def make_llm(s: Settings):
     raise ValueError(f"Unknown LLM_PROVIDER: {s.llm_provider}")
 
 
-def make_tts(s: Settings):
+def make_tts(s: Settings, locale: Locale):
+    voice = s.tts_voice or locale.voices.get(s.tts_provider)
+    if not voice:
+        raise ValueError(f"No {s.tts_provider} voice for {locale.code}: set voices in locale.yaml or TTS_VOICE")
     match s.tts_provider:
         case "cartesia":
             from pipecat.services.cartesia.tts import CartesiaTTSService
@@ -58,10 +64,7 @@ def make_tts(s: Settings):
             return CartesiaTTSService(
                 api_key=s.cartesia_api_key,
                 settings=CartesiaTTSService.Settings(
-                    model="sonic-2",
-                    # pt-BR voice from the Cartesia catalog; override with TTS_VOICE.
-                    voice=s.tts_voice or "700d1ee3-a641-4018-ba6e-899dcadc9e2b",
-                    language=Language.PT,
+                    model="sonic-2", voice=voice, language=locale.base_language
                 ),
             )
         case "elevenlabs":
@@ -70,9 +73,7 @@ def make_tts(s: Settings):
             return ElevenLabsTTSService(
                 api_key=s.elevenlabs_api_key,
                 settings=ElevenLabsTTSService.Settings(
-                    model="eleven_flash_v2_5",
-                    voice=s.tts_voice or "21m00Tcm4TlvDq8ikWAM",
-                    language=Language.PT,
+                    model="eleven_flash_v2_5", voice=voice, language=locale.base_language
                 ),
             )
         case "openai":
@@ -80,6 +81,6 @@ def make_tts(s: Settings):
 
             return OpenAITTSService(
                 api_key=s.openai_api_key,
-                settings=OpenAITTSService.Settings(model="gpt-4o-mini-tts", voice=s.tts_voice or "nova"),
+                settings=OpenAITTSService.Settings(model="gpt-4o-mini-tts", voice=voice),
             )
     raise ValueError(f"Unknown TTS_PROVIDER: {s.tts_provider}")

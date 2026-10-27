@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     cartesia_api_key: str = ""
     elevenlabs_api_key: str = ""
 
+    default_language: str = "pt-BR"
     llm_model: str = ""
     tts_voice: str = ""
 

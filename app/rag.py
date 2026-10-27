@@ -1,12 +1,10 @@
-"""Simple local RAG: splits agent/knowledge/*.md into chunks by heading, BM25 search."""
+"""Simple local RAG: splits a locale's knowledge/*.md into chunks by heading, BM25 search."""
 
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from rank_bm25 import BM25Okapi
-
-KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "agent" / "knowledge"
 
 
 @dataclass
@@ -20,7 +18,7 @@ def _tokenize(text: str) -> list[str]:
     return re.findall(r"\w+", text.lower())
 
 
-def load_chunks(directory: Path = KNOWLEDGE_DIR) -> list[Chunk]:
+def load_chunks(directory: Path) -> list[Chunk]:
     chunks: list[Chunk] = []
     for path in sorted(directory.glob("*.md")):
         heading, lines = path.stem, []
@@ -41,7 +39,7 @@ def load_chunks(directory: Path = KNOWLEDGE_DIR) -> list[Chunk]:
 
 
 class KnowledgeBase:
-    def __init__(self, directory: Path = KNOWLEDGE_DIR):
+    def __init__(self, directory: Path):
         self.chunks = load_chunks(directory)
         self._bm25 = BM25Okapi([_tokenize(f"{c.heading} {c.text}") for c in self.chunks])
 

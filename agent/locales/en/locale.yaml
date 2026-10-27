@@ -1,0 +1,9 @@
+# pipecat Language enum value. STT uses the full code; TTS uses the base language ("en").
+language: en-US
+greeting: "(The call has started. Greet the caller and ask how you can help.)"
+tools_heading: Tools available on this call
+no_tools: none
+voices:
+  cartesia: 71a7ad14-091c-4e8e-a314-022ece01c121
+  elevenlabs: 21m00Tcm4TlvDq8ikWAM
+  openai: nova

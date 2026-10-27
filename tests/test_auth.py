@@ -23,6 +23,15 @@ def test_unlisted_tool_is_denied():
     assert not POLICIES.can_call("5511999990002", "schedule_appointment")
 
 
+def test_caller_entry_with_role_and_language():
+    p = Policies({"roles": {"patient": {"tools": ["x"]}}, "callers": {"551100": {"role": "patient", "language": "en"}}})
+    assert p.role_of("551100") == "patient"
+    assert p.language_of("551100") == "en"
+    assert p.can_call("551100", "x")
+
+
 def test_shipped_policies_file_loads():
     p = Policies.load()
     assert "search_knowledge" in p.allowed_tools("qualquer")
+    assert p.language_of("5511999990003") == "en"
+    assert p.language_of("5511999990002") == "pt-BR"

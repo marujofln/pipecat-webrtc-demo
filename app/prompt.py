@@ -1,8 +1,6 @@
-from pathlib import Path
-
-SYSTEM_PATH = Path(__file__).resolve().parent.parent / "agent" / "system.md"
+from app.locales import Locale
 
 
-def build_system_prompt(tool_names: list[str], path: Path = SYSTEM_PATH) -> str:
-    tools = ", ".join(sorted(tool_names)) or "nenhuma"
-    return f"{path.read_text()}\n\n## Ferramentas disponíveis nesta ligação\n{tools}\n"
+def build_system_prompt(locale: Locale, tool_names: list[str]) -> str:
+    tools = ", ".join(sorted(tool_names)) or locale.no_tools
+    return f"{locale.system_path.read_text()}\n\n## {locale.tools_heading}\n{tools}\n"

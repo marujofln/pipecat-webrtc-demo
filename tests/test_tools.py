@@ -2,9 +2,12 @@ import httpx
 import pytest
 
 from app.auth import Policies
+from app.locales import load_locales
 from app.rag import KnowledgeBase
 from app.tools import build_registry, crm, parking
 from mock_apis.server import app as mock_app
+
+KNOWLEDGE_DIR = load_locales()["pt-BR"].knowledge_dir
 
 POLICIES = Policies(
     {
@@ -48,7 +51,7 @@ def mock_http(monkeypatch):
 
 def handlers_for(caller):
     llm = FakeLLM()
-    build_registry(KnowledgeBase()).register(llm, POLICIES, caller)
+    build_registry(KnowledgeBase(KNOWLEDGE_DIR)).register(llm, POLICIES, caller)
     return llm.handlers
 
 
@@ -75,5 +78,5 @@ async def test_schedule_flow_against_mock_crm():
 
 
 def test_schema_only_exposes_allowed_tools():
-    names = [t.name for t in build_registry(KnowledgeBase()).tools_for(POLICIES, "desconhecido")]
+    names = [t.name for t in build_registry(KnowledgeBase(KNOWLEDGE_DIR)).tools_for(POLICIES, "desconhecido")]
     assert names == ["search_knowledge"]

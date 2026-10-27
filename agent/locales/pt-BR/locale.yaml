@@ -1,0 +1,9 @@
+# Valor do enum pipecat Language. O STT usa o código completo; o TTS usa o idioma base ("pt").
+language: pt-BR
+greeting: "(A ligação começou. Cumprimente e pergunte como pode ajudar.)"
+tools_heading: Ferramentas disponíveis nesta ligação
+no_tools: nenhuma
+voices:
+  cartesia: 700d1ee3-a641-4018-ba6e-899dcadc9e2b
+  elevenlabs: 21m00Tcm4TlvDq8ikWAM
+  openai: nova

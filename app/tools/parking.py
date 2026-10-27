@@ -13,8 +13,8 @@ async def open_gate(args: dict) -> dict:
 
 OPEN_GATE = Tool(
     name="open_gate",
-    description="Abre a cancela do estacionamento para um veículo. Só chame após o usuário confirmar a placa.",
-    properties={"plate": {"type": "string", "description": "Placa do veículo, ex: ABC1D23"}},
+    description="Opens the parking gate for a vehicle. Only call after the user confirms the plate.",
+    properties={"plate": {"type": "string", "description": "Vehicle plate, e.g. ABC1D23"}},
     required=["plate"],
     handler=open_gate,
 )

@@ -12,8 +12,17 @@ roles:
 
 default_role: guest
 
+# Call language: caller's explicit language > longest matching country code > DEFAULT_LANGUAGE.
+# Values are folder names under agent/locales/.
+languages:
+  by_prefix:
+    "55": pt-BR
+    "1": en
+
+# A caller maps to a role, or to {role, language}.
 # Caller "web-demo" is the local browser client.
 callers:
   web-demo: staff
   "5511999990001": patient
   "5511999990002": resident
+  "5511999990003": {role: patient, language: en}

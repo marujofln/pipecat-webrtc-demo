@@ -20,8 +20,10 @@ from pipecat.transports.smallwebrtc.request_handler import (
 )
 
 from app import whatsapp
+from app.auth import Policies
 from app.config import settings
-from app.pipeline import run_bot
+from app.locales import resolve_locale
+from app.pipeline import LOCALES, run_bot
 
 STATIC = Path(__file__).resolve().parent.parent / "static"
 WEB_CALLER = "web-demo"
@@ -31,14 +33,22 @@ whatsapp_calls: dict[str, SmallWebRTCConnection] = {}
 bot_tasks: set[asyncio.Task] = set()
 
 
-def spawn_bot(connection: SmallWebRTCConnection, caller: str) -> None:
-    task = asyncio.create_task(run_bot(connection, caller))
+def spawn_bot(connection: SmallWebRTCConnection, caller: str, language: str | None = None) -> None:
+    # Policies are reloaded per call so policies.yaml edits apply without a restart.
+    policies = Policies.load()
+    locale = resolve_locale(caller, policies, LOCALES, settings.default_language, language)
+    task = asyncio.create_task(run_bot(connection, caller, locale, policies))
     bot_tasks.add(task)
     task.add_done_callback(bot_tasks.discard)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.default_language not in LOCALES:
+        raise RuntimeError(
+            f"DEFAULT_LANGUAGE={settings.default_language!r} not found in agent/locales/ "
+            f"(available: {', '.join(LOCALES)})"
+        )
     yield
     await webrtc_handler.close()
     for conn in whatsapp_calls.values():
@@ -59,10 +69,14 @@ async def index():
 @app.post("/api/offer")
 async def offer(request: Request):
     data = await request.json()
-    caller = (data.get("request_data") or data.get("requestData") or {}).get("caller", WEB_CALLER)
+    request_data = data.get("request_data") or data.get("requestData") or {}
+    caller = request_data.get("caller", WEB_CALLER)
+    language = request_data.get("language") or None
+    if language and language not in LOCALES:
+        raise HTTPException(400, f"unknown language {language!r}; available: {', '.join(LOCALES)}")
 
     async def on_connection(connection: SmallWebRTCConnection):
-        spawn_bot(connection, caller)
+        spawn_bot(connection, caller, language)
 
     return await webrtc_handler.handle_web_request(SmallWebRTCRequest.from_dict(data), on_connection)
 

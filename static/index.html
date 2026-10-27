@@ -20,7 +20,15 @@
       <option value="web-demo">web-demo (staff: tudo)</option>
       <option value="5511999990001">5511999990001 (patient: consultas)</option>
       <option value="5511999990002">5511999990002 (resident: cancela)</option>
+      <option value="5511999990003">5511999990003 (patient, inglês)</option>
       <option value="5500000000000">5500000000000 (guest: só FAQ)</option>
+    </select>
+  </label><br>
+  <label>Idioma:
+    <select id="language">
+      <option value="">automático (pelo chamador)</option>
+      <option value="pt-BR">Português (pt-BR)</option>
+      <option value="en">English (en)</option>
     </select>
   </label><br>
   <button id="call">Ligar</button>
@@ -52,7 +60,10 @@ async function start() {
     body: JSON.stringify({
       sdp: pc.localDescription.sdp,
       type: pc.localDescription.type,
-      request_data: { caller: document.getElementById("caller").value },
+      request_data: {
+        caller: document.getElementById("caller").value,
+        language: document.getElementById("language").value,
+      },
     }),
   });
   if (!res.ok) throw new Error("offer falhou: " + res.status);
