@@ -1,4 +1,4 @@
-"""Autorização de tools por chamador. A barreira real fica aqui, não no prompt."""
+"""Per-caller tool authorization. This is the real gate, not the prompt."""
 
 from pathlib import Path
 
@@ -27,5 +27,5 @@ class Policies:
     def can_call(self, caller: str, tool: str) -> bool:
         allowed = tool in self.allowed_tools(caller)
         if not allowed:
-            logger.warning(f"Tool negada: {tool} para {caller} (papel {self.role_of(caller)})")
+            logger.warning(f"Tool denied: {tool} for {caller} (role {self.role_of(caller)})")
         return allowed

@@ -1,4 +1,4 @@
-"""Monta e roda o pipeline de voz para uma conexão WebRTC (navegador ou WhatsApp)."""
+"""Builds and runs the voice pipeline for a WebRTC connection (browser or WhatsApp)."""
 
 from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -28,7 +28,7 @@ REGISTRY = build_registry(KB)
 
 async def run_bot(connection: SmallWebRTCConnection, caller: str) -> None:
     policies = Policies.load()
-    logger.info(f"Nova sessão: caller={caller} papel={policies.role_of(caller)}")
+    logger.info(f"New session: caller={caller} role={policies.role_of(caller)}")
 
     transport = SmallWebRTCTransport(
         webrtc_connection=connection,
@@ -68,7 +68,7 @@ async def run_bot(connection: SmallWebRTCConnection, caller: str) -> None:
 
     @transport.event_handler("on_client_disconnected")
     async def on_disconnected(transport, client):
-        logger.info(f"Sessão encerrada: caller={caller}")
+        logger.info(f"Session ended: caller={caller}")
         await worker.cancel()
 
     await WorkerRunner(handle_sigint=False).run(worker)

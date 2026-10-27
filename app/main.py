@@ -1,6 +1,6 @@
-"""Servidor: cliente web de teste (/api/offer) + webhook de chamadas do WhatsApp.
+"""Server: web test client (/api/offer) + WhatsApp calls webhook.
 
-Rodar: uv run uvicorn app.main:app --port 7860
+Run: uv run uvicorn app.main:app --port 7860
 """
 
 import asyncio
@@ -53,7 +53,7 @@ async def index():
     return FileResponse(STATIC / "index.html")
 
 
-# --- Cliente web de teste -------------------------------------------------------------
+# --- Web test client ------------------------------------------------------------------
 
 
 @app.post("/api/offer")
@@ -90,7 +90,7 @@ async def whatsapp_verify(
 ):
     if mode == "subscribe" and token == settings.whatsapp_verify_token:
         return Response(challenge, media_type="text/plain")
-    raise HTTPException(403, "verify token inválido")
+    raise HTTPException(403, "invalid verify token")
 
 
 @app.post("/whatsapp/webhook")
@@ -99,7 +99,7 @@ async def whatsapp_webhook(request: Request):
     if not whatsapp.verify_signature(
         body, request.headers.get("X-Hub-Signature-256"), settings.whatsapp_app_secret
     ):
-        raise HTTPException(401, "assinatura inválida")
+        raise HTTPException(401, "invalid signature")
 
     for event in whatsapp.parse_call_events(json.loads(body)):
         logger.info(f"WhatsApp call {event.call_id}: {event.event} de {event.caller}")
@@ -107,23 +107,23 @@ async def whatsapp_webhook(request: Request):
             asyncio.create_task(answer_whatsapp_call(event))
         elif event.event == "terminate" and (conn := whatsapp_calls.pop(event.call_id, None)):
             await conn.disconnect()
-    # A Meta exige 200 rápido; o atendimento segue em background.
+    # Meta requires a fast 200; the call is handled in the background.
     return {"status": "ok"}
 
 
 async def answer_whatsapp_call(event: whatsapp.CallEvent) -> None:
     connection = SmallWebRTCConnection()
 
-    # Bot encerrou do nosso lado (ex.: pipeline terminou) → avisa o WhatsApp.
-    # Se foi o usuário que desligou, o webhook "terminate" já removeu a entrada.
+    # The bot ended on our side (e.g. the pipeline finished) → tell WhatsApp.
+    # If the user hung up, the "terminate" webhook already removed the entry.
     @connection.event_handler("closed")
     async def on_closed(conn):
         if whatsapp_calls.pop(event.call_id, None):
             await terminate_quietly(event.call_id)
 
     try:
-        # aiortc só devolve o answer depois de coletar todos os ICE candidates,
-        # o que é necessário: o WhatsApp não faz trickle ICE.
+        # aiortc only returns the answer after gathering every ICE candidate,
+        # which is required: WhatsApp does not do trickle ICE.
         await connection.initialize(sdp=event.sdp, type="offer")
         answer = connection.get_answer()["sdp"]
         whatsapp_calls[event.call_id] = connection
@@ -131,7 +131,7 @@ async def answer_whatsapp_call(event: whatsapp.CallEvent) -> None:
         spawn_bot(connection, event.caller)
         await whatsapp.call_action(event.call_id, "accept", answer)
     except Exception:
-        logger.exception(f"Falha ao atender chamada {event.call_id}")
+        logger.exception(f"Failed to answer call {event.call_id}")
         whatsapp_calls.pop(event.call_id, None)
         await connection.disconnect()
         await terminate_quietly(event.call_id)
@@ -141,4 +141,4 @@ async def terminate_quietly(call_id: str) -> None:
     try:
         await whatsapp.call_action(call_id, "terminate")
     except Exception:
-        logger.warning(f"Não foi possível encerrar a chamada {call_id} no WhatsApp")
+        logger.warning(f"Could not terminate call {call_id} on WhatsApp")

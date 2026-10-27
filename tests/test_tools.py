@@ -34,7 +34,7 @@ class FakeParams:
 
 @pytest.fixture(autouse=True)
 def mock_http(monkeypatch):
-    """Faz o httpx das tools falar direto com o mock_apis em memória."""
+    """Routes the tools' httpx calls straight to the in-memory mock_apis."""
     real = httpx.AsyncClient
 
     def client(**kw):

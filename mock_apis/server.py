@@ -1,9 +1,9 @@
-"""APIs mock de CRM e estacionamento. Rodar: uvicorn mock_apis.server:app --port 8002"""
+"""Mock CRM and parking APIs. Run: uvicorn mock_apis.server:app --port 8002"""
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI(title="Mock CRM + Estacionamento")
+app = FastAPI(title="Mock CRM + Parking")
 SLOTS = ["2026-11-03 09:00", "2026-11-03 14:30", "2026-11-04 10:00"]
 APPOINTMENTS: list[dict] = []
 

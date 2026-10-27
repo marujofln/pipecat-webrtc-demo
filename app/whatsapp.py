@@ -1,8 +1,8 @@
-"""WhatsApp Business Calling API: parse do webhook `calls` e ações de chamada via Graph API.
+"""WhatsApp Business Calling API: `calls` webhook parsing and call actions via the Graph API.
 
-Fluxo de chamada recebida (user-initiated):
-  webhook event=connect (SDP offer) → pre_accept(answer) → accept(answer) → mídia WebRTC
-  webhook event=terminate → encerra a sessão local
+Inbound (user-initiated) call flow:
+  webhook event=connect (SDP offer) → pre_accept(answer) → accept(answer) → WebRTC media
+  webhook event=terminate → ends the local session
 """
 
 import hashlib
@@ -28,7 +28,7 @@ class CallEvent:
 
 def verify_signature(body: bytes, header: str | None, app_secret: str) -> bool:
     if not app_secret:
-        logger.warning("WHATSAPP_APP_SECRET vazio: assinatura do webhook NÃO verificada")
+        logger.warning("WHATSAPP_APP_SECRET is empty: webhook signature is NOT verified")
         return True
     if not header or not header.startswith("sha256="):
         return False
@@ -58,7 +58,7 @@ def parse_call_events(payload: dict) -> list[CallEvent]:
 
 async def call_action(call_id: str, action: str, sdp: str | None = None) -> dict:
     if not (settings.whatsapp_access_token and settings.whatsapp_phone_number_id):
-        raise RuntimeError("Configure WHATSAPP_ACCESS_TOKEN e WHATSAPP_PHONE_NUMBER_ID no .env")
+        raise RuntimeError("Set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID in .env")
     body = {"messaging_product": "whatsapp", "call_id": call_id, "action": action}
     if sdp:
         body["session"] = {"sdp_type": "answer", "sdp": sdp}
@@ -69,6 +69,6 @@ async def call_action(call_id: str, action: str, sdp: str | None = None) -> dict
             json=body,
         )
     if r.is_error:
-        logger.error(f"WhatsApp {action} falhou ({r.status_code}): {r.text}")
+        logger.error(f"WhatsApp {action} failed ({r.status_code}): {r.text}")
     r.raise_for_status()
     return r.json()

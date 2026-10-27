@@ -37,7 +37,7 @@ async function start() {
   pc.onconnectionstatechange = () => log("conexão: " + pc.connectionState);
   const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
   mic.getTracks().forEach((t) => pc.addTrack(t, mic));
-  // SmallWebRTC espera transceivers de vídeo além do áudio.
+  // SmallWebRTC expects video transceivers in addition to audio.
   pc.addTransceiver("video", { direction: "sendrecv" });
   pc.addTransceiver("video", { direction: "sendrecv" });
 

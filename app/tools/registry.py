@@ -1,4 +1,4 @@
-"""Registro de tools: schema + handler. Toda chamada passa por auth.can_call."""
+"""Tool registry: schema + handler. Every call goes through auth.can_call."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -43,7 +43,7 @@ class ToolRegistry:
         return ToolsSchema(standard_tools=[t.schema() for t in self.tools_for(policies, caller)])
 
     def register(self, llm, policies: Policies, caller: str) -> None:
-        """Registra todas as tools no LLM; cada handler checa a autorização na hora da chamada."""
+        """Registers every tool on the LLM; each handler checks authorization at call time."""
         for tool in self.tools.values():
             llm.register_function(tool.name, self._make_handler(tool, policies, caller))
 
@@ -52,14 +52,14 @@ class ToolRegistry:
         async def handler(params: FunctionCallParams):
             if not policies.can_call(caller, tool.name):
                 await params.result_callback(
-                    {"error": "not_authorized", "message": "Esta ação não é permitida para este chamador."}
+                    {"error": "not_authorized", "message": "This action is not allowed for this caller."}
                 )
                 return
             try:
                 logger.info(f"Tool {tool.name} args={params.arguments} caller={caller}")
                 await params.result_callback(await tool.handler(params.arguments))
             except Exception as e:
-                logger.exception(f"Falha na tool {tool.name}")
+                logger.exception(f"Tool {tool.name} failed")
                 await params.result_callback({"error": "tool_failed", "message": str(e)})
 
         return handler

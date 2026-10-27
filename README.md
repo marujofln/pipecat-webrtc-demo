@@ -1,5 +1,7 @@
 # Pipecat WebRTC Demo — agente de voz para WhatsApp
 
+🇺🇸 [Read in English](README.en.md)
+
 Agente de voz em português que atende chamadas WebRTC (WhatsApp Business Calling API ou navegador),
 segue instruções em Markdown, consulta uma base de conhecimento (RAG) e chama APIs externas
 (CRM, estacionamento) **somente quando o chamador tem autorização**.

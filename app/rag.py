@@ -1,4 +1,4 @@
-"""RAG local simples: chunks por heading dos .md em agent/knowledge, busca BM25."""
+"""Simple local RAG: splits agent/knowledge/*.md into chunks by heading, BM25 search."""
 
 import re
 from dataclasses import dataclass
