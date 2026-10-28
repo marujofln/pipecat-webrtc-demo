@@ -4,7 +4,7 @@
 
 A multilingual voice agent (pt-BR and en, extensible) that answers WebRTC calls (WhatsApp Business Calling API or a
 browser), follows instructions written in Markdown, looks up a knowledge base (RAG) and calls
-external APIs (CRM, parking system) **only when the caller is authorized**.
+external APIs (appointment CRM) **only when the caller is authorized**.
 
 ```
 WhatsApp ──webhook (SDP offer)──► /whatsapp/webhook ─┐
@@ -18,7 +18,7 @@ Browser  ──POST /api/offer────────────────�
 ```bash
 uv sync
 cp .env.example .env        # fill in the keys for the providers you choose
-uv run uvicorn mock_apis.server:app --port 8002     # fake CRM + parking APIs
+uv run uvicorn mock_apis.server:app --port 8002     # fake CRM API
 uv run uvicorn app.main:app --port 7860             # the agent
 ```
 
@@ -27,8 +27,7 @@ Open http://localhost:7860, pick a caller and click **Ligar** (Call).
 Test script (pick **English (en)** in the language selector to run it in English; the phrases below are for pt-BR):
 - "Que horas vocês abrem?" (What time do you open?) → answered from the knowledge base (`search_knowledge`).
 - As `5511999990001` (patient): "Quero marcar uma consulta" (I want to book an appointment) → lists slots and books in the CRM.
-- As `5511999990002` (resident): "Abre a cancela, placa ABC1D23" (Open the gate, plate ABC1D23) → opens the gate.
-- As `5500000000000` (guest): ask to open the gate → the agent refuses.
+- As `5500000000000` (guest): ask to book an appointment → the agent refuses.
 
 ## Customizing the agent
 

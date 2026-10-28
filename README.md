@@ -4,7 +4,7 @@
 
 Agente de voz multilíngue (pt-BR e en, extensível) que atende chamadas WebRTC (WhatsApp Business Calling API ou navegador),
 segue instruções em Markdown, consulta uma base de conhecimento (RAG) e chama APIs externas
-(CRM, estacionamento) **somente quando o chamador tem autorização**.
+(CRM de consultas) **somente quando o chamador tem autorização**.
 
 ```
 WhatsApp ──webhook (SDP offer)──► /whatsapp/webhook ─┐
@@ -18,7 +18,7 @@ Navegador ──POST /api/offer────────────────�
 ```bash
 uv sync
 cp .env.example .env        # preencha as chaves dos provedores escolhidos
-uv run uvicorn mock_apis.server:app --port 8002     # CRM + estacionamento falsos
+uv run uvicorn mock_apis.server:app --port 8002     # CRM falso
 uv run uvicorn app.main:app --port 7860             # agente
 ```
 
@@ -27,8 +27,7 @@ Abra http://localhost:7860, escolha o chamador e clique em **Ligar**.
 Roteiro de teste:
 - "Que horas vocês abrem?" → responde pela base de conhecimento (`search_knowledge`).
 - Como `5511999990001` (patient): "Quero marcar uma consulta" → lista horários e marca no CRM.
-- Como `5511999990002` (resident): "Abre a cancela, placa ABC1D23" → abre a cancela.
-- Como `5500000000000` (guest): pedir para abrir a cancela → o agente recusa.
+- Como `5500000000000` (guest): pedir para marcar consulta → o agente recusa.
 
 ## Personalizando o atendimento
 

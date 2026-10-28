@@ -1,6 +1,5 @@
 from app.rag import KnowledgeBase
 from app.tools.crm import LIST_SLOTS, SCHEDULE
-from app.tools.parking import OPEN_GATE
 from app.tools.registry import Tool, ToolRegistry
 
 
@@ -16,4 +15,4 @@ def build_registry(kb: KnowledgeBase) -> ToolRegistry:
         required=["query"],
         handler=search_knowledge,
     )
-    return ToolRegistry([search, LIST_SLOTS, SCHEDULE, OPEN_GATE])
+    return ToolRegistry([search, LIST_SLOTS, SCHEDULE])

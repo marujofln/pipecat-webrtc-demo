@@ -5,10 +5,8 @@ roles:
     tools: [search_knowledge]
   patient:
     tools: [search_knowledge, list_available_slots, schedule_appointment]
-  resident:
-    tools: [search_knowledge, open_gate]
   staff:
-    tools: [search_knowledge, list_available_slots, schedule_appointment, open_gate]
+    tools: [search_knowledge, list_available_slots, schedule_appointment]
 
 default_role: guest
 
@@ -24,5 +22,4 @@ languages:
 callers:
   web-demo: staff
   "5511999990001": patient
-  "5511999990002": resident
   "5511999990003": {role: patient, language: en}

@@ -8,7 +8,7 @@ EN = LOCALES["en"].knowledge_dir
 
 def test_chunks_split_by_heading():
     headings = {c.heading for c in load_chunks(PT)}
-    assert {"Horário de funcionamento", "Cancela", "Valor da consulta"} <= headings
+    assert {"Horário de funcionamento", "Como marcar uma consulta", "Valor da consulta"} <= headings
 
 
 def test_search_finds_relevant_chunk():

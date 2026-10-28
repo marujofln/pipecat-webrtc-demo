@@ -26,7 +26,6 @@ class Settings(BaseSettings):
     whatsapp_phone_number_id: str = ""
 
     crm_base_url: str = "http://localhost:8002/crm"
-    parking_base_url: str = "http://localhost:8002/parking"
 
 
 settings = Settings()

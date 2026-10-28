@@ -4,14 +4,14 @@ import pytest
 from app.auth import Policies
 from app.locales import load_locales
 from app.rag import KnowledgeBase
-from app.tools import build_registry, crm, parking
+from app.tools import build_registry, crm
 from mock_apis.server import app as mock_app
 
 KNOWLEDGE_DIR = load_locales()["pt-BR"].knowledge_dir
 
 POLICIES = Policies(
     {
-        "roles": {"guest": {"tools": ["search_knowledge"]}, "staff": {"tools": ["open_gate", "schedule_appointment", "list_available_slots"]}},
+        "roles": {"guest": {"tools": ["search_knowledge"]}, "staff": {"tools": ["schedule_appointment", "list_available_slots"]}},
         "default_role": "guest",
         "callers": {"staff-1": "staff"},
     }
@@ -44,9 +44,7 @@ def mock_http(monkeypatch):
         return real(transport=httpx.ASGITransport(app=mock_app), base_url="http://mock", **kw)
 
     monkeypatch.setattr(crm.httpx, "AsyncClient", client)
-    monkeypatch.setattr(parking.httpx, "AsyncClient", client)
     monkeypatch.setattr(crm.settings, "crm_base_url", "http://mock/crm")
-    monkeypatch.setattr(parking.settings, "parking_base_url", "http://mock/parking")
 
 
 def handlers_for(caller):
@@ -55,15 +53,9 @@ def handlers_for(caller):
     return llm.handlers
 
 
-async def test_authorized_caller_opens_gate():
-    params = FakeParams({"plate": "ABC1D23"})
-    await handlers_for("staff-1")["open_gate"](params)
-    assert params.result == {"status": "opened", "plate": "ABC1D23"}
-
-
 async def test_unauthorized_caller_is_denied_even_if_llm_calls_tool():
-    params = FakeParams({"plate": "ABC1D23"})
-    await handlers_for("desconhecido")["open_gate"](params)
+    params = FakeParams({"patient_name": "Maria", "slot": "2026-11-03 09:00"})
+    await handlers_for("desconhecido")["schedule_appointment"](params)
     assert params.result["error"] == "not_authorized"
 
 
