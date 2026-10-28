@@ -1,0 +1,16 @@
+services:
+  mock:
+    build: .
+    command: ["uvicorn", "mock_apis.server:app", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "8002:8002"
+
+  agent:
+    build: .
+    env_file: .env
+    environment:
+      CRM_BASE_URL: http://localhost:8002/crm
+    # WebRTC media uses random UDP ports, so the agent shares the host network (Linux).
+    network_mode: host
+    depends_on:
+      - mock
