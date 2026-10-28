@@ -5,6 +5,8 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
+from app.logutil import mask
+
 POLICIES_PATH = Path(__file__).resolve().parent.parent / "agent" / "policies.yaml"
 
 
@@ -12,9 +14,7 @@ class Policies:
     def __init__(self, data: dict):
         self.roles = {name: set(r.get("tools", [])) for name, r in data.get("roles", {}).items()}
         self.default_role = data.get("default_role", "guest")
-        self.language_prefixes = {
-            str(k): v for k, v in (data.get("languages") or {}).get("by_prefix", {}).items()
-        }
+        self.language_prefixes = {str(k): v for k, v in (data.get("languages") or {}).get("by_prefix", {}).items()}
         self.callers: dict[str, str] = {}
         self.caller_languages: dict[str, str] = {}
         for caller, entry in data.get("callers", {}).items():
@@ -46,5 +46,5 @@ class Policies:
     def can_call(self, caller: str, tool: str) -> bool:
         allowed = tool in self.allowed_tools(caller)
         if not allowed:
-            logger.warning(f"Tool denied: {tool} for {caller} (role {self.role_of(caller)})")
+            logger.warning(f"Tool denied: {tool} for {mask(caller)} (role {self.role_of(caller)})")
         return allowed

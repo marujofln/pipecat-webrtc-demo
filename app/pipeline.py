@@ -35,12 +35,8 @@ def registry_for(locale_code: str) -> ToolRegistry:
     return build_registry(KnowledgeBase(LOCALES[locale_code].knowledge_dir))
 
 
-async def run_bot(
-    connection: SmallWebRTCConnection, caller: str, locale: Locale, policies: Policies
-) -> None:
-    logger.info(
-        f"New session: caller={caller} role={policies.role_of(caller)} language={locale.code}"
-    )
+async def run_bot(connection: SmallWebRTCConnection, caller: str, locale: Locale, policies: Policies) -> None:
+    logger.info(f"New session: caller={caller} role={policies.role_of(caller)} language={locale.code}")
 
     transport = SmallWebRTCTransport(
         webrtc_connection=connection,

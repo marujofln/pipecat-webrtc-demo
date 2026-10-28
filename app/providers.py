@@ -81,9 +81,7 @@ def make_tts(s: Settings, locale: Locale):
 
             return CartesiaTTSService(
                 api_key=s.cartesia_api_key,
-                settings=CartesiaTTSService.Settings(
-                    model="sonic-2", voice=voice, language=locale.base_language
-                ),
+                settings=CartesiaTTSService.Settings(model="sonic-2", voice=voice, language=locale.base_language),
             )
         case "elevenlabs":
             from pipecat.services.elevenlabs.tts import ElevenLabsTTSService

@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""
 
+    # Web test client: remote access needs this bearer token; without it only loopback is allowed.
+    web_api_token: str = ""
+    max_sessions: int = 10
+
     crm_base_url: str = "http://localhost:8002/crm"
 
 

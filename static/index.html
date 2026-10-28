@@ -30,6 +30,7 @@
       <option value="en">English (en)</option>
     </select>
   </label><br>
+  <label>Token (acesso remoto): <input id="token" type="password" autocomplete="off"></label><br>
   <button id="call">Ligar</button>
   <audio id="audio" autoplay></audio>
   <div id="log"></div>
@@ -59,7 +60,12 @@ async function start() {
   });
   const res = await fetch("/api/offer", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(document.getElementById("token").value && {
+        Authorization: "Bearer " + document.getElementById("token").value,
+      }),
+    },
     body: JSON.stringify({
       sdp: pc.localDescription.sdp,
       type: pc.localDescription.type,

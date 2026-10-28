@@ -3,7 +3,8 @@ services:
     build: .
     command: ["uvicorn", "mock_apis.server:app", "--host", "0.0.0.0", "--port", "8002"]
     ports:
-      - "8002:8002"
+      # Loopback only: the mock has no auth, and the agent shares the host network.
+      - "127.0.0.1:8002:8002"
 
   agent:
     build: .

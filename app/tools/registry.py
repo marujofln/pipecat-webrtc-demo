@@ -10,6 +10,7 @@ from pipecat.adapters.llm.schemas.tools_schema import ToolsSchema
 from pipecat.services.llm_service import FunctionCallParams
 
 from app.auth import Policies
+from app.logutil import mask
 
 Handler = Callable[[dict[str, Any]], Awaitable[Any]]
 
@@ -56,10 +57,13 @@ class ToolRegistry:
                 )
                 return
             try:
-                logger.info(f"Tool {tool.name} args={params.arguments} caller={caller}")
+                # Argument values can be personal data (names), so only their keys are logged.
+                logger.info(f"Tool {tool.name} args={sorted(params.arguments)} caller={mask(caller)}")
                 await params.result_callback(await tool.handler(params.arguments))
             except Exception as e:
                 logger.exception(f"Tool {tool.name} failed")
-                await params.result_callback({"error": "tool_failed", "message": str(e)})
+                # Internal details (URLs, stack data) stay in the log; the LLM gets a generic error.
+                message = str(e) if isinstance(e, ValueError) else "The service is unavailable right now."
+                await params.result_callback({"error": "tool_failed", "message": message})
 
         return handler

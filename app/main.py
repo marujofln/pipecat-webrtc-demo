@@ -4,6 +4,7 @@ Run: uv run uvicorn app.main:app --port 7860
 """
 
 import asyncio
+import hmac
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -23,6 +24,7 @@ from app import whatsapp
 from app.auth import Policies
 from app.config import settings
 from app.locales import resolve_locale
+from app.logutil import mask
 from app.pipeline import LOCALES, run_bot
 
 STATIC = Path(__file__).resolve().parent.parent / "static"
@@ -55,7 +57,8 @@ async def lifespan(app: FastAPI):
         await conn.disconnect()
 
 
-app = FastAPI(lifespan=lifespan)
+# No public OpenAPI/Swagger pages on a server that handles live calls.
+app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 
 @app.get("/")
@@ -66,11 +69,36 @@ async def index():
 # --- Web test client ------------------------------------------------------------------
 
 
+LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+
+
+def require_web_access(request: Request) -> None:
+    """The web client picks its own caller, so it is for trusted testers only.
+
+    With WEB_API_TOKEN set, a matching bearer token is required; otherwise only loopback clients
+    are accepted (behind a reverse proxy every client looks like loopback: set the token there).
+    """
+    token = settings.web_api_token
+    if token:
+        supplied = request.headers.get("Authorization", "").removeprefix("Bearer ")
+        if not hmac.compare_digest(supplied.encode(), token.encode()):
+            raise HTTPException(401, "invalid or missing token")
+    elif (request.client.host if request.client else "") not in LOOPBACK:
+        raise HTTPException(403, "set WEB_API_TOKEN to use the web client remotely")
+
+
+def require_capacity() -> None:
+    if len(bot_tasks) >= settings.max_sessions:
+        raise HTTPException(503, "too many active calls")
+
+
 @app.post("/api/offer")
 async def offer(request: Request):
+    require_web_access(request)
+    require_capacity()
     data = await request.json()
     request_data = data.get("request_data") or data.get("requestData") or {}
-    caller = request_data.get("caller", WEB_CALLER)
+    caller = str(request_data.get("caller") or WEB_CALLER)
     language = request_data.get("language") or None
     if language and language not in LOCALES:
         raise HTTPException(400, f"unknown language {language!r}; available: {', '.join(LOCALES)}")
@@ -83,7 +111,10 @@ async def offer(request: Request):
 
 @app.patch("/api/offer")
 async def ice_candidate(request: Request):
+    require_web_access(request)
     data = await request.json()
+    if not isinstance(data.get("pc_id"), str):
+        raise HTTPException(400, "pc_id is required")
     await webrtc_handler.handle_patch_request(
         SmallWebRTCPatchRequest(
             pc_id=data["pc_id"],
@@ -102,7 +133,8 @@ async def whatsapp_verify(
     token: str = Query(alias="hub.verify_token"),
     challenge: str = Query(alias="hub.challenge"),
 ):
-    if mode == "subscribe" and token == settings.whatsapp_verify_token:
+    expected = settings.whatsapp_verify_token
+    if expected and mode == "subscribe" and hmac.compare_digest(token.encode(), expected.encode()):
         return Response(challenge, media_type="text/plain")
     raise HTTPException(403, "invalid verify token")
 
@@ -110,15 +142,25 @@ async def whatsapp_verify(
 @app.post("/whatsapp/webhook")
 async def whatsapp_webhook(request: Request):
     body = await request.body()
-    if not whatsapp.verify_signature(
-        body, request.headers.get("X-Hub-Signature-256"), settings.whatsapp_app_secret
-    ):
+    if not whatsapp.verify_signature(body, request.headers.get("X-Hub-Signature-256"), settings.whatsapp_app_secret):
         raise HTTPException(401, "invalid signature")
 
-    for event in whatsapp.parse_call_events(json.loads(body)):
-        logger.info(f"WhatsApp call {event.call_id}: {event.event} de {event.caller}")
+    try:
+        payload = json.loads(body)
+    except ValueError:
+        raise HTTPException(400, "invalid JSON") from None
+    if not isinstance(payload, dict):
+        raise HTTPException(400, "invalid payload")
+
+    for event in whatsapp.parse_call_events(payload):
+        logger.info(f"WhatsApp call {event.call_id}: {event.event} from {mask(event.caller)}")
         if event.event == "connect" and event.sdp:
-            asyncio.create_task(answer_whatsapp_call(event))
+            if len(whatsapp_calls) >= settings.max_sessions or event.call_id in whatsapp_calls:
+                logger.warning(f"Ignoring call {event.call_id}: at capacity or duplicate")
+                continue
+            task = asyncio.create_task(answer_whatsapp_call(event))
+            bot_tasks.add(task)
+            task.add_done_callback(bot_tasks.discard)
         elif event.event == "terminate" and (conn := whatsapp_calls.pop(event.call_id, None)):
             await conn.disconnect()
     # Meta requires a fast 200; the call is handled in the background.

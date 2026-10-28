@@ -1,21 +1,34 @@
+import re
+
 import httpx
 
 from app.config import settings
 from app.tools.registry import Tool
 
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+SLOT_RE = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}")
+
 
 async def list_available_slots(args: dict) -> dict:
+    date = args.get("date") or ""
+    if date and not DATE_RE.fullmatch(date):
+        raise ValueError("date must be YYYY-MM-DD")
     async with httpx.AsyncClient(timeout=10) as c:
-        r = await c.get(f"{settings.crm_base_url}/slots", params={"date": args.get("date") or ""})
+        r = await c.get(f"{settings.crm_base_url}/slots", params={"date": date})
         r.raise_for_status()
         return r.json()
 
 
 async def schedule_appointment(args: dict) -> dict:
+    name, slot = str(args["patient_name"]).strip(), str(args["slot"])
+    if not 1 <= len(name) <= 100 or not name.isprintable():
+        raise ValueError("patient_name must be 1-100 printable characters")
+    if not SLOT_RE.fullmatch(slot):
+        raise ValueError("slot must be exactly as returned by list_available_slots")
     async with httpx.AsyncClient(timeout=10) as c:
         r = await c.post(
             f"{settings.crm_base_url}/appointments",
-            json={"patient_name": args["patient_name"], "slot": args["slot"]},
+            json={"patient_name": name, "slot": slot},
         )
         r.raise_for_status()
         return r.json()

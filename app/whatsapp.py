@@ -28,8 +28,8 @@ class CallEvent:
 
 def verify_signature(body: bytes, header: str | None, app_secret: str) -> bool:
     if not app_secret:
-        logger.warning("WHATSAPP_APP_SECRET is empty: webhook signature is NOT verified")
-        return True
+        logger.error("WHATSAPP_APP_SECRET is empty: rejecting webhook (signature cannot be verified)")
+        return False
     if not header or not header.startswith("sha256="):
         return False
     expected = hmac.new(app_secret.encode(), body, hashlib.sha256).hexdigest()
@@ -43,6 +43,8 @@ def parse_call_events(payload: dict) -> list[CallEvent]:
             if change.get("field") != "calls":
                 continue
             for call in change.get("value", {}).get("calls", []):
+                if not isinstance(call, dict) or not call.get("id"):
+                    continue
                 session = call.get("session") or {}
                 events.append(
                     CallEvent(

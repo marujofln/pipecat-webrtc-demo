@@ -30,7 +30,13 @@ CONNECT = {
 
 def test_parse_connect_event():
     [e] = parse_call_events(CONNECT)
-    assert (e.call_id, e.event, e.caller, e.sdp_type, e.sdp) == ("wacid.ABC", "connect", "5511999990002", "offer", "v=0...")
+    assert (e.call_id, e.event, e.caller, e.sdp_type, e.sdp) == (
+        "wacid.ABC",
+        "connect",
+        "5511999990002",
+        "offer",
+        "v=0...",
+    )
 
 
 def test_ignores_non_call_fields():
@@ -43,3 +49,12 @@ def test_signature():
     assert verify_signature(body, sig, "segredo")
     assert not verify_signature(body, "sha256=errado", "segredo")
     assert not verify_signature(body, None, "segredo")
+
+
+def test_empty_secret_rejects_everything():
+    assert not verify_signature(b"{}", "sha256=anything", "")
+
+
+def test_parse_skips_malformed_calls():
+    payload = {"entry": [{"changes": [{"field": "calls", "value": {"calls": [{"event": "connect"}, "x"]}}]}]}
+    assert parse_call_events(payload) == []

@@ -2,7 +2,10 @@ from app.auth import Policies
 
 POLICIES = Policies(
     {
-        "roles": {"guest": {"tools": ["search_knowledge"]}, "patient": {"tools": ["search_knowledge", "list_available_slots", "schedule_appointment"]}},
+        "roles": {
+            "guest": {"tools": ["search_knowledge"]},
+            "patient": {"tools": ["search_knowledge", "list_available_slots", "schedule_appointment"]},
+        },
         "default_role": "guest",
         "callers": {"5511999990001": "patient"},
     }

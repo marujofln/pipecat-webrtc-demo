@@ -11,5 +11,8 @@ COPY agent ./agent
 COPY mock_apis ./mock_apis
 COPY static ./static
 
+RUN useradd --system --no-create-home app
+USER app
+
 EXPOSE 7860
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]

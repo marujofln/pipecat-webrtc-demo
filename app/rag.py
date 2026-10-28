@@ -18,23 +18,23 @@ def _tokenize(text: str) -> list[str]:
     return re.findall(r"\w+", text.lower())
 
 
+def _append_chunk(chunks: list[Chunk], source: str, heading: str, lines: list[str]) -> None:
+    body = "\n".join(lines).strip()
+    if body:
+        chunks.append(Chunk(source, heading, body))
+
+
 def load_chunks(directory: Path) -> list[Chunk]:
     chunks: list[Chunk] = []
     for path in sorted(directory.glob("*.md")):
         heading, lines = path.stem, []
-
-        def flush():
-            body = "\n".join(lines).strip()
-            if body:
-                chunks.append(Chunk(path.name, heading, body))
-
         for line in path.read_text().splitlines():
             if line.startswith("#"):
-                flush()
+                _append_chunk(chunks, path.name, heading, lines)
                 heading, lines = line.lstrip("# ").strip(), []
             else:
                 lines.append(line)
-        flush()
+        _append_chunk(chunks, path.name, heading, lines)
     return chunks
 
 
@@ -45,5 +45,5 @@ class KnowledgeBase:
 
     def search(self, query: str, k: int = 3) -> list[Chunk]:
         scores = self._bm25.get_scores(_tokenize(query))
-        ranked = sorted(zip(scores, self.chunks), key=lambda p: p[0], reverse=True)
+        ranked = sorted(zip(scores, self.chunks, strict=True), key=lambda p: p[0], reverse=True)
         return [c for s, c in ranked[:k] if s > 0]

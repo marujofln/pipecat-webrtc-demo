@@ -11,7 +11,10 @@ KNOWLEDGE_DIR = load_locales()["pt-BR"].knowledge_dir
 
 POLICIES = Policies(
     {
-        "roles": {"guest": {"tools": ["search_knowledge"]}, "staff": {"tools": ["schedule_appointment", "list_available_slots"]}},
+        "roles": {
+            "guest": {"tools": ["search_knowledge"]},
+            "staff": {"tools": ["schedule_appointment", "list_available_slots"]},
+        },
         "default_role": "guest",
         "callers": {"staff-1": "staff"},
     }
@@ -78,3 +81,21 @@ async def test_list_slots_accepts_null_date():
 def test_schema_only_exposes_allowed_tools():
     names = [t.name for t in build_registry(KnowledgeBase(KNOWLEDGE_DIR)).tools_for(POLICIES, "desconhecido")]
     assert names == ["search_knowledge"]
+
+
+async def test_invalid_slot_is_rejected_before_reaching_crm():
+    params = FakeParams({"patient_name": "Maria", "slot": "'; DROP TABLE"})
+    await handlers_for("staff-1")["schedule_appointment"](params)
+    assert params.result["error"] == "tool_failed"
+
+
+async def test_internal_errors_are_not_leaked_to_llm(monkeypatch):
+    monkeypatch.setattr(crm.settings, "crm_base_url", "http://secret-internal-host/crm")
+    monkeypatch.setattr(
+        crm.httpx,
+        "AsyncClient",
+        lambda **kw: httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(500, request=r))),
+    )
+    params = FakeParams({"date": ""})
+    await handlers_for("staff-1")["list_available_slots"](params)
+    assert "secret-internal-host" not in params.result["message"]
