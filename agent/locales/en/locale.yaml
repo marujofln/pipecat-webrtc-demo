@@ -3,6 +3,9 @@ language: en-US
 greeting: "(The call has started. Greet the caller and ask how you can help.)"
 tools_heading: Tools available on this call
 no_tools: none
+# Spoken without the LLM when it fails: the first asks the caller to repeat, the second ends the call.
+error_retry: Sorry, I had a little problem here. Could you say that again, please?
+error_hangup: Sorry, we're having a technical problem right now. Please call again later.
 voices:
   cartesia: 71a7ad14-091c-4e8e-a314-022ece01c121
   elevenlabs: 21m00Tcm4TlvDq8ikWAM

@@ -39,9 +39,13 @@ const btn = document.getElementById("call");
 let pc = null;
 
 async function start() {
-  pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+  const conn = (pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }));
   pc.ontrack = (e) => { document.getElementById("audio").srcObject = e.streams[0]; };
-  pc.onconnectionstatechange = () => log("conexão: " + pc.connectionState);
+  pc.onconnectionstatechange = () => {
+    log("conexão: " + conn.connectionState);
+    // The agent may hang up first (e.g. after an LLM failure).
+    if (pc === conn && ["disconnected", "failed", "closed"].includes(conn.connectionState)) stop();
+  };
   const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
   mic.getTracks().forEach((t) => pc.addTrack(t, mic));
   // SmallWebRTC expects video transceivers in addition to audio.

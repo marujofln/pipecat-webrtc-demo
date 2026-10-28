@@ -35,7 +35,7 @@ Test script (pick **English (en)** in the language selector to run it in English
 |---|---|
 | Persona, tone and service rules | `agent/locales/<language>/system.md` |
 | Knowledge base (RAG) | `agent/locales/<language>/knowledge/*.md`, one chunk per `#`/`##` heading |
-| Greeting, voices and language code | `agent/locales/<language>/locale.yaml` |
+| Greeting, LLM error lines, voices and language code | `agent/locales/<language>/locale.yaml` |
 | Who may use each tool, language per number/country code | `agent/policies.yaml` |
 | New tools / APIs | `app/tools/` + register in `app/tools/__init__.py` |
 | Providers | `STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER` in `.env` |

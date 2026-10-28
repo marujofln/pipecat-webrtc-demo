@@ -35,7 +35,7 @@ Roteiro de teste:
 |---|---|
 | Persona, tom e regras do atendimento | `agent/locales/<idioma>/system.md` |
 | Base de conhecimento (RAG) | `agent/locales/<idioma>/knowledge/*.md`, um trecho por título `#`/`##` |
-| Saudação, vozes e código de idioma | `agent/locales/<idioma>/locale.yaml` |
+| Saudação, falas de erro do LLM, vozes e código de idioma | `agent/locales/<idioma>/locale.yaml` |
 | Quem pode usar cada tool, idioma por número/DDI | `agent/policies.yaml` |
 | Novas tools / APIs | `app/tools/` + registro em `app/tools/__init__.py` |
 | Provedores | `STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER` no `.env` |

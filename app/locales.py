@@ -19,6 +19,8 @@ class Locale:
     greeting: str
     tools_heading: str
     no_tools: str
+    error_retry: str
+    error_hangup: str
     voices: dict[str, str]
     tts_instructions: str | None = None
 
@@ -47,6 +49,8 @@ def load_locales(directory: Path = LOCALES_DIR) -> dict[str, Locale]:
             greeting=data["greeting"],
             tools_heading=data["tools_heading"],
             no_tools=data["no_tools"],
+            error_retry=data["error_retry"],
+            error_hangup=data["error_hangup"],
             voices=data.get("voices", {}),
             tts_instructions=data.get("tts_instructions"),
         )

@@ -24,6 +24,7 @@ def test_shipped_locales_are_complete():
         assert locale.system_path.exists()
         assert list(locale.knowledge_dir.glob("*.md"))
         assert {"cartesia", "elevenlabs", "openai"} <= set(locale.voices)
+        assert locale.error_retry and locale.error_hangup
 
 
 def test_base_language_drops_region():

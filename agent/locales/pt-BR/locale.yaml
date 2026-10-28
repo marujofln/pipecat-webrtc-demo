@@ -3,6 +3,9 @@ language: pt-BR
 greeting: "(A ligação começou. Cumprimente e pergunte como pode ajudar.)"
 tools_heading: Ferramentas disponíveis nesta ligação
 no_tools: nenhuma
+# Ditas sem passar pelo LLM quando ele falha: a primeira pede para repetir, a segunda encerra a ligação.
+error_retry: Desculpe, tive um probleminha aqui. Pode repetir, por favor?
+error_hangup: Desculpe, estamos com um problema técnico agora. Por favor, ligue de novo mais tarde.
 # Vozes brasileiras. O código "pt" não define o sotaque; quem define é a voz.
 voices:
   cartesia: 2c5dc34c-50e9-4e93-9a87-08e81ad8b4bd    # Clara (Customer Support), pt-BR

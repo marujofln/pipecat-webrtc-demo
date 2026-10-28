@@ -23,6 +23,7 @@ from app.locales import Locale, load_locales
 from app.prompt import build_system_prompt
 from app.providers import make_llm, make_stt, make_tts
 from app.rag import KnowledgeBase
+from app.recovery import LLMRecovery, LLMSuccessWatcher, install
 from app.tools import ToolRegistry, build_registry
 
 LOCALES = load_locales()
@@ -58,18 +59,21 @@ async def run_bot(
         context, user_params=LLMUserAggregatorParams(vad_analyzer=SileroVADAnalyzer())
     )
 
+    recovery = LLMRecovery()
     pipeline = Pipeline(
         [
             transport.input(),
             stt,
             aggregators.user(),
             llm,
+            LLMSuccessWatcher(recovery),
             tts,
             transport.output(),
             aggregators.assistant(),
         ]
     )
     worker = PipelineWorker(pipeline, params=PipelineParams(enable_metrics=True))
+    install(worker, llm, recovery, locale)
 
     @transport.event_handler("on_client_connected")
     async def on_connected(transport, client):
