@@ -116,3 +116,7 @@ disallowed tool) and WhatsApp webhook parsing/signature checks.
 
 ## Out of scope for v1
 Persistence, multi-tenancy, handoff to a human, transcripts and analytics, vector RAG.
+
+## License
+
+[BSD 3-Clause](LICENSE)

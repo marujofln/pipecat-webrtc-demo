@@ -116,3 +116,7 @@ permitida) e o parse/assinatura do webhook do WhatsApp.
 
 ## Fora da v1
 Persistência, multi-tenant, transferência para humano, transcrições e analytics, RAG vetorial.
+
+## Licença
+
+[BSD 3-Clause](LICENSE)
