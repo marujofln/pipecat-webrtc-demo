@@ -41,7 +41,7 @@ Roteiro de teste:
 | Novas tools / APIs | `app/tools/` + registro em `app/tools/__init__.py` |
 | Provedores | `STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER` no `.env` |
 
-Provedores suportados: STT `deepgram|openai`, LLM `anthropic|openai|google`, TTS `cartesia|elevenlabs|openai`.
+Provedores suportados: STT `deepgram|openai|groq`, LLM `anthropic|openai|google|groq`, TTS `cartesia|elevenlabs|openai|groq` (o TTS da Groq só fala inglês).
 Para adicionar outro, inclua um `case` em `app/providers.py`.
 
 ### Idiomas

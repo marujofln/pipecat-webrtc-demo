@@ -41,7 +41,7 @@ Test script (pick **English (en)** in the language selector to run it in English
 | New tools / APIs | `app/tools/` + register in `app/tools/__init__.py` |
 | Providers | `STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER` in `.env` |
 
-Supported providers: STT `deepgram|openai`, LLM `anthropic|openai|google`, TTS `cartesia|elevenlabs|openai`.
+Supported providers: STT `deepgram|openai|groq`, LLM `anthropic|openai|google|groq`, TTS `cartesia|elevenlabs|openai|groq` (Groq TTS is English-only).
 To add another one, add a `case` in `app/providers.py`.
 
 ### Languages

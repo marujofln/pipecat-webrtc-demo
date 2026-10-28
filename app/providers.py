@@ -24,6 +24,13 @@ def make_stt(s: Settings, locale: Locale):
                 api_key=s.openai_api_key,
                 settings=OpenAISTTService.Settings(model="gpt-4o-transcribe", language=locale.language),
             )
+        case "groq":
+            from pipecat.services.groq.stt import GroqSTTService
+
+            return GroqSTTService(
+                api_key=s.groq_api_key,
+                settings=GroqSTTService.Settings(model="whisper-large-v3-turbo", language=locale.language),
+            )
     raise ValueError(f"Unknown STT_PROVIDER: {s.stt_provider}")
 
 
@@ -49,6 +56,13 @@ def make_llm(s: Settings):
             return GoogleLLMService(
                 api_key=s.google_api_key,
                 settings=GoogleLLMService.Settings(model=s.llm_model or "gemini-2.5-flash"),
+            )
+        case "groq":
+            from pipecat.services.groq.llm import GroqLLMService
+
+            return GroqLLMService(
+                api_key=s.groq_api_key,
+                settings=GroqLLMService.Settings(model=s.llm_model or "openai/gpt-oss-120b"),
             )
     raise ValueError(f"Unknown LLM_PROVIDER: {s.llm_provider}")
 
@@ -84,5 +98,12 @@ def make_tts(s: Settings, locale: Locale):
                 settings=OpenAITTSService.Settings(
                     model="gpt-4o-mini-tts", voice=voice, instructions=locale.tts_instructions
                 ),
+            )
+        case "groq":
+            from pipecat.services.groq.tts import GroqTTSService
+
+            return GroqTTSService(
+                api_key=s.groq_api_key,
+                settings=GroqTTSService.Settings(model="canopylabs/orpheus-v1-english", voice=voice),
             )
     raise ValueError(f"Unknown TTS_PROVIDER: {s.tts_provider}")

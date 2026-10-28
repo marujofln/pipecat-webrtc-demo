@@ -7,3 +7,4 @@ voices:
   cartesia: 71a7ad14-091c-4e8e-a314-022ece01c121
   elevenlabs: 21m00Tcm4TlvDq8ikWAM
   openai: nova
+  groq: autumn                          # Orpheus is English-only
