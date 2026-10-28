@@ -69,6 +69,12 @@ async def test_schedule_flow_against_mock_crm():
     assert booked.result["status"] == "confirmed"
 
 
+async def test_list_slots_accepts_null_date():
+    params = FakeParams({"date": None})
+    await handlers_for("staff-1")["list_available_slots"](params)
+    assert params.result["slots"]
+
+
 def test_schema_only_exposes_allowed_tools():
     names = [t.name for t in build_registry(KnowledgeBase(KNOWLEDGE_DIR)).tools_for(POLICIES, "desconhecido")]
     assert names == ["search_knowledge"]

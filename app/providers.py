@@ -60,9 +60,13 @@ def make_llm(s: Settings):
         case "groq":
             from pipecat.services.groq.llm import GroqLLMService
 
+            model = s.llm_model or "openai/gpt-oss-120b"
+            # Below "high", gpt-oss often answers a tool result with several turns glued together,
+            # inventing the caller's replies ("Obrigado, [Nome]"). "high" costs ~0.7 s more.
+            effort = "high" if model.startswith("openai/gpt-oss") else None
             return GroqLLMService(
                 api_key=s.groq_api_key,
-                settings=GroqLLMService.Settings(model=s.llm_model or "openai/gpt-oss-120b"),
+                settings=GroqLLMService.Settings(model=model, reasoning_effort=effort),
             )
     raise ValueError(f"Unknown LLM_PROVIDER: {s.llm_provider}")
 

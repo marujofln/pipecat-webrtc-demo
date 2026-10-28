@@ -6,7 +6,7 @@ from app.tools.registry import Tool
 
 async def list_available_slots(args: dict) -> dict:
     async with httpx.AsyncClient(timeout=10) as c:
-        r = await c.get(f"{settings.crm_base_url}/slots", params={"date": args.get("date", "")})
+        r = await c.get(f"{settings.crm_base_url}/slots", params={"date": args.get("date") or ""})
         r.raise_for_status()
         return r.json()
 
@@ -24,8 +24,9 @@ async def schedule_appointment(args: dict) -> dict:
 LIST_SLOTS = Tool(
     name="list_available_slots",
     description="Lists available appointment slots, optionally for one date (YYYY-MM-DD).",
-    properties={"date": {"type": "string", "description": "Date as YYYY-MM-DD (optional)"}},
-    required=[],
+    # Required and never null: Groq rejects a null for a string field, so "" means any date.
+    properties={"date": {"type": "string", "description": "Date as YYYY-MM-DD, or an empty string for any date"}},
+    required=["date"],
     handler=list_available_slots,
 )
 
